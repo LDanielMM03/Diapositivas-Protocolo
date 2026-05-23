@@ -2,570 +2,423 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Protocolo de Investigación – Ciberseguridad para Contador Público</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<title>Protocolo – Ciberseguridad para Contador Público ITO</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --navy:    #0d2350;
-  --navy2:   #112b61;
-  --orange:  #e87722;
-  --orange2: #f59340;
-  --white:   #ffffff;
-  --offwhite:#f4f6fa;
-  --gray:    #e2e6ef;
-  --text-d:  #0d1f3c;
-  --text-m:  #3a4a6b;
-  --font-h:  'Montserrat', sans-serif;
-  --font-b:  'Open Sans', sans-serif;
+  --navy:   #0d2350;
+  --orange: #e87722;
+  --org2:   #f59340;
+  --white:  #ffffff;
+  --off:    #f4f6fa;
+  --gray:   #dde3ef;
+  --td:     #0d1f3c;
+  --tm:     #3a4a6b;
+  --fh:     'Montserrat', sans-serif;
+  --fb:     'Open Sans', sans-serif;
 }
 
 html, body {
   width: 100%; height: 100%;
   overflow: hidden;
-  background: var(--navy);
-  font-family: var(--font-b);
-  color: var(--text-d);
+  background: #0a1628;
+  font-family: var(--fb);
 }
 
-/* ── SLIDESHOW ── */
-#slideshow { position: relative; width: 100%; height: 100%; overflow: hidden; }
+/* ── SCALE WRAPPER ── */
+#stage {
+  position: fixed;
+  top: 0; left: 0;
+  width: 1920px; height: 1080px;
+  transform-origin: top left;
+  /* scale set by JS */
+}
 
+/* ── SLIDES (inside stage, all 1920×1080) ── */
 .slide {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
+  position: absolute;
+  width: 1920px; height: 1080px;
+  top: 0; left: 0;
+  overflow: hidden;
   opacity: 0; pointer-events: none;
-  transform: translateX(70px);
-  transition: opacity .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+  transform: translateX(80px);
+  transition: opacity .5s cubic-bezier(.4,0,.2,1),
+              transform .5s cubic-bezier(.4,0,.2,1);
   z-index: 1;
 }
-.slide.active   { opacity: 1; pointer-events: all; transform: translateX(0); }
-.slide.exit-l   { opacity: 0; transform: translateX(-70px); transition: opacity .38s ease, transform .38s ease; }
-.slide.enter-r  { transform: translateX(70px); opacity: 0; }
-.slide.enter-l  { transform: translateX(-70px); opacity: 0; }
+.slide.active  { opacity: 1; pointer-events: all; transform: translateX(0); }
+.slide.exit-l  { opacity: 0; transform: translateX(-80px); transition: opacity .38s ease, transform .38s ease; }
+.slide.enter-r { opacity: 0; transform: translateX(80px); }
+.slide.enter-l { opacity: 0; transform: translateX(-80px); }
 
-/* ── PROGRESS BAR (top) ── */
+/* ── FIXED UI (outside stage, in screen coords) ── */
 #prog-bar {
-  position: fixed; top: 0; left: 0; height: 4px;
-  background: linear-gradient(90deg, var(--orange), var(--orange2));
-  transition: width .4s ease; z-index: 200;
+  position: fixed; top: 0; left: 0; height: 5px; z-index: 999;
+  background: linear-gradient(90deg, var(--orange), var(--org2));
+  transition: width .4s ease;
 }
-
-/* ── SLIDE COUNTER (bottom-right, small) ── */
 #slide-counter {
-  position: fixed; bottom: 1rem; right: 1.4rem;
-  font-family: var(--font-h); font-size: .72rem; font-weight: 600;
-  color: rgba(255,255,255,.5); z-index: 200; letter-spacing: .08em;
+  position: fixed; bottom: 14px; right: 20px;
+  font-family: var(--fh); font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,.45); z-index: 999; letter-spacing: 1px;
 }
-
-/* ── NAV ARROWS ── */
 #nav {
-  position: fixed; bottom: .7rem; left: 50%;
+  position: fixed; bottom: 10px; left: 50%;
   transform: translateX(-50%);
-  display: flex; gap: .6rem; z-index: 200;
+  display: flex; gap: 8px; z-index: 999;
 }
-.nav-btn {
-  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-  color: #fff; cursor: pointer; font-size: .95rem;
-  width: 32px; height: 32px; border-radius: 50%;
+.nbtn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.22);
+  color: #fff; cursor: pointer; font-size: 15px;
   display: flex; align-items: center; justify-content: center;
   transition: background .2s;
 }
-.nav-btn:hover { background: var(--orange); border-color: var(--orange); }
-
-/* ── FULLSCREEN HINT ── */
+.nbtn:hover { background: var(--orange); border-color: var(--orange); }
 #fs-hint {
-  position: fixed; top: .9rem; right: 1.4rem;
-  font-family: var(--font-h); font-size: .65rem; font-weight: 600;
-  color: rgba(255,255,255,.35); z-index: 200; letter-spacing: .1em;
+  position: fixed; top: 12px; right: 18px;
+  font-family: var(--fh); font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,.3); z-index: 999; letter-spacing: 1px;
 }
 
-/* ═══════════════════════════════════════════
-   SLIDE 1 – PORTADA
-═══════════════════════════════════════════ */
-#s1 {
-  flex-direction: row;
-  background: var(--white);
-}
-#s1 .left {
-  flex: 1.15; padding: 3.5rem 4rem;
-  display: flex; flex-direction: column; justify-content: space-between;
-  background: var(--white);
-}
-#s1 .logos { display: flex; align-items: center; gap: 1.4rem; margin-bottom: auto; }
-#s1 .logo-placeholder {
-  height: 56px; display: flex; align-items: center;
-  font-family: var(--font-h); font-weight: 900;
-}
-#s1 .logo-tecnm {
-  color: var(--navy); font-size: .9rem; line-height: 1.2; border-left: 4px solid var(--orange); padding-left: .7rem;
-}
-#s1 .logo-ito {
-  color: var(--navy); font-size: .85rem; line-height: 1.2; border-left: 3px solid var(--navy); padding-left: .7rem;
-}
-#s1 .tag {
-  font-family: var(--font-h); font-weight: 700; font-size: .85rem;
-  color: var(--orange); letter-spacing: .08em; text-transform: uppercase;
-  margin-top: 3rem; margin-bottom: .8rem;
-}
-#s1 h1 {
-  font-family: var(--font-h); font-weight: 900;
-  font-size: clamp(1.9rem, 3.8vw, 3.2rem); line-height: 1.1;
-  color: var(--navy); margin-bottom: 1.2rem;
-}
-#s1 .subtitle {
-  font-size: clamp(.82rem, 1.1vw, .98rem); color: var(--text-m);
-  line-height: 1.65; max-width: 520px; margin-bottom: 2rem;
-}
-#s1 .divider {
-  width: 70px; height: 4px; background: var(--orange);
-  border-radius: 2px; margin-bottom: 2rem;
-}
-#s1 .meta { font-size: .83rem; color: var(--text-m); line-height: 1.8; }
-#s1 .meta strong { color: var(--navy); font-weight: 600; }
-#s1 .right {
-  flex: .85;
+/* ════════════════════════════════════════
+   INNER SLIDE CHROME (shared header)
+════════════════════════════════════════ */
+.inner { background: var(--off); }
+
+.sh {                           /* slide header bar */
+  width: 1920px; height: 120px;
   background: var(--navy);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  position: relative; overflow: hidden; padding: 2.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 80px; flex-shrink: 0;
 }
-#s1 .right::before {
-  content: '';
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(circle at 70% 30%, rgba(232,119,34,.18) 0%, transparent 55%),
-    repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(255,255,255,.03) 38px, rgba(255,255,255,.03) 39px),
-    repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(255,255,255,.03) 38px, rgba(255,255,255,.03) 39px);
-}
-/* Shield SVG inline */
-#s1 .shield-wrap { position: relative; z-index: 1; }
-#s1 .shield-wrap svg { width: min(220px, 30vw); height: auto; drop-shadow: 0 8px 32px rgba(0,0,0,.4); }
-#s1 .right-label {
-  position: relative; z-index: 1;
-  margin-top: 2.5rem;
-  font-family: var(--font-h); font-weight: 700;
-  font-size: .8rem; color: rgba(255,255,255,.5);
-  letter-spacing: .14em; text-transform: uppercase;
-}
-/* binary decoration */
-#s1 .binary {
-  position: absolute; z-index: 0;
-  font-family: monospace; font-size: .65rem;
-  color: rgba(255,255,255,.07); line-height: 1.6;
-  white-space: pre; pointer-events: none;
-}
-#s1 .binary.br { right: 1rem; bottom: 3rem; text-align: right; }
-#s1 .binary.tl { left: 1rem; top: 3rem; }
+.sh-left {}
+.sh-tag  { font-family:var(--fh); font-size:18px; font-weight:700; color:var(--orange); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.sh-tit  { font-family:var(--fh); font-size:34px; font-weight:800; color:var(--white); line-height:1; }
+.sh-logo { font-family:var(--fh); font-size:18px; font-weight:700; color:rgba(255,255,255,.35); letter-spacing:2px; }
 
-/* ═══════════════════════════════════════════
-   INNER SLIDES LAYOUT (slides 2–10)
-═══════════════════════════════════════════ */
-.inner-slide {
-  flex-direction: column;
-  background: var(--offwhite);
-}
+.obar { width:1920px; height:7px; background:linear-gradient(90deg,var(--orange),var(--org2)); flex-shrink:0; }
 
-/* Header bar */
-.slide-header {
-  background: var(--navy);
-  padding: .9rem 3rem;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
+/* body area below header */
+.body {
+  width: 1920px;
+  height: calc(1080px - 120px - 7px);
+  padding: 48px 80px 52px;
+  display: flex; gap: 48px;
+  overflow: hidden;
 }
-.slide-header .sh-tag {
-  font-family: var(--font-h); font-size: .68rem; font-weight: 700;
-  color: var(--orange); letter-spacing: .15em; text-transform: uppercase;
-}
-.slide-header .sh-title {
-  font-family: var(--font-h); font-size: 1.35rem; font-weight: 800;
-  color: var(--white);
-}
-.slide-header .sh-right {
-  display: flex; align-items: center; gap: 1rem;
-}
-.sh-logo-small {
-  font-family: var(--font-h); font-weight: 800; font-size: .7rem;
-  color: rgba(255,255,255,.45); letter-spacing: .1em;
-}
+.body.col1 { flex-direction: column; }
 
-/* Orange accent bar below header */
-.orange-bar { height: 5px; background: linear-gradient(90deg, var(--orange), var(--orange2)); flex-shrink: 0; }
+/* two-column shorthand */
+.col2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; width: 100%; }
+.col3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; width: 100%; }
 
-/* Content area */
-.slide-body {
-  flex: 1; display: flex;
-  padding: 1.6rem 3rem 2.2rem;
-  overflow: hidden; gap: 1.6rem;
-}
-
-/* Two-column */
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; width: 100%; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; width: 100%; }
-
-/* Cards */
+/* ── CARDS ── */
 .card {
-  background: var(--white);
-  border: 1px solid var(--gray);
-  border-radius: 10px;
-  padding: 1.15rem 1.4rem;
-  margin-bottom: .85rem;
-  border-left: 4px solid var(--orange);
+  background: var(--white); border: 1px solid var(--gray);
+  border-radius: 14px; padding: 28px 32px;
+  border-left: 6px solid var(--orange);
 }
-.card:last-child { margin-bottom: 0; }
-.card h3 {
-  font-family: var(--font-h); font-size: .95rem; font-weight: 700;
-  color: var(--navy); margin-bottom: .5rem;
-}
-.card p, .card li { font-size: .87rem; line-height: 1.65; color: var(--text-m); }
-.card ul { padding-left: 1.2rem; }
-.card ul li { margin-bottom: .3rem; }
-.card.navy { border-left-color: var(--navy); }
-.card.flat { border-left: none; border-top: 3px solid var(--orange); }
+.card.nv  { border-left-color: var(--navy); }
+.card.top { border-left: none; border-top: 5px solid var(--orange); }
+.card h3  { font-family:var(--fh); font-size:22px; font-weight:700; color:var(--navy); margin-bottom:10px; }
+.card p   { font-size:19px; line-height:1.65; color:var(--tm); }
+.card ul  { padding-left:22px; }
+.card li  { font-size:19px; line-height:1.7; color:var(--tm); }
 
-/* Section label */
-.sec-label {
-  font-family: var(--font-h); font-weight: 700; font-size: .72rem;
-  color: var(--orange); letter-spacing: .15em; text-transform: uppercase;
-  margin-bottom: .45rem;
+/* section labels inside body */
+.lbl {
+  font-family:var(--fh); font-size:16px; font-weight:700;
+  color:var(--orange); letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:10px; display:block;
 }
 
 /* ── STAT BOXES ── */
-.stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; width: 100%; }
-.stat-box {
-  background: var(--white); border: 1px solid var(--gray);
-  border-radius: 10px; padding: 1.2rem 1rem; text-align: center;
-  border-top: 4px solid var(--orange);
+.sbox {
+  background:var(--white); border:1px solid var(--gray);
+  border-radius:14px; padding:32px 24px; text-align:center;
+  border-top:5px solid var(--orange);
 }
-.stat-box .s-num {
-  font-family: var(--font-h); font-weight: 900;
-  font-size: clamp(1.6rem, 3vw, 2.4rem); color: var(--navy); line-height: 1;
-  margin-bottom: .35rem;
-}
-.stat-box .s-lbl { font-size: .75rem; color: var(--text-m); line-height: 1.4; }
+.sbox .sn { font-family:var(--fh); font-weight:900; font-size:52px; color:var(--navy); line-height:1; margin-bottom:10px; }
+.sbox .sl { font-size:18px; line-height:1.5; color:var(--tm); }
 
-/* ── TIMELINE ── */
-.timeline { display: flex; flex-direction: column; gap: .8rem; }
-.tl-item { display: flex; gap: 1rem; align-items: flex-start; }
-.tl-dot {
-  flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-  background: var(--navy); color: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-h); font-weight: 800; font-size: .82rem;
-}
-.tl-content h4 { font-family: var(--font-h); font-size: .9rem; font-weight: 700; color: var(--navy); margin-bottom: .2rem; }
-.tl-content p  { font-size: .84rem; color: var(--text-m); line-height: 1.55; }
+/* ── TIMELINE DOTS ── */
+.tl { display:flex; flex-direction:column; gap:0; }
+.ti { display:flex; gap:20px; align-items:stretch; }
+.ti-left { display:flex; flex-direction:column; align-items:center; width:36px; flex-shrink:0; }
+.ti-dot  { width:36px; height:36px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--fh); font-weight:800; font-size:17px; flex-shrink:0; }
+.ti-dot.org { background:var(--orange); }
+.ti-line { flex:1; width:3px; background:var(--gray); margin:4px 0; }
+.ti-text { padding: 4px 0 18px; }
+.ti-text h4 { font-family:var(--fh); font-size:20px; font-weight:700; color:var(--navy); margin-bottom:3px; }
+.ti-text p  { font-size:17px; color:var(--tm); line-height:1.5; }
 
 /* ── MODULE CARDS ── */
-.module-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: .9rem; width: 100%; }
-.mod-card {
-  background: var(--white); border: 1px solid var(--gray);
-  border-radius: 10px; padding: 1.1rem;
-  border-top: 4px solid var(--orange);
-  display: flex; flex-direction: column; gap: .5rem;
+.mgrid { display:grid; grid-template-columns:repeat(5,1fr); gap:24px; width:100%; }
+.mcard {
+  background:var(--white); border:1px solid var(--gray);
+  border-radius:14px; padding:28px 24px;
+  border-top:5px solid var(--orange);
+  display:flex; flex-direction:column; gap:12px;
 }
-.mod-card .m-num { font-family: var(--font-h); font-size: .7rem; font-weight: 700; color: var(--orange); letter-spacing: .1em; text-transform: uppercase; }
-.mod-card .m-icon { font-size: 1.6rem; }
-.mod-card h4 { font-family: var(--font-h); font-size: .88rem; font-weight: 700; color: var(--navy); line-height: 1.3; }
-.mod-card p { font-size: .8rem; color: var(--text-m); line-height: 1.55; }
+.mcard .mn { font-family:var(--fh); font-size:15px; font-weight:700; color:var(--orange); letter-spacing:1px; text-transform:uppercase; }
+.mcard .mi { font-size:36px; }
+.mcard h4  { font-family:var(--fh); font-size:20px; font-weight:700; color:var(--navy); line-height:1.3; }
+.mcard p   { font-size:17px; color:var(--tm); line-height:1.55; }
 
 /* ── BUDGET TABLE ── */
-.budget-wrap { width: 100%; overflow-y: auto; max-height: 100%; }
-.budget-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
-.budget-table thead th {
-  background: var(--navy); color: var(--white);
-  font-family: var(--font-h); font-size: .72rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .07em;
-  padding: .6rem .9rem; text-align: left;
+.bwrap { width:100%; overflow:hidden; }
+.btbl  { width:100%; border-collapse:collapse; }
+.btbl thead th {
+  background:var(--navy); color:#fff;
+  font-family:var(--fh); font-size:17px; font-weight:700;
+  text-transform:uppercase; letter-spacing:1px;
+  padding:14px 18px; text-align:left;
 }
-.budget-table tbody tr:nth-child(odd)  td { background: var(--white); }
-.budget-table tbody tr:nth-child(even) td { background: var(--offwhite); }
-.budget-table tbody td { padding: .5rem .9rem; color: var(--text-m); border-bottom: 1px solid var(--gray); }
-.budget-table .section-row td {
-  background: var(--orange) !important; color: var(--white);
-  font-family: var(--font-h); font-weight: 700; font-size: .73rem;
-  text-transform: uppercase; letter-spacing: .06em; padding: .4rem .9rem;
-}
-.budget-table .total-row td {
-  background: var(--navy) !important; color: var(--white);
-  font-family: var(--font-h); font-weight: 800; font-size: .88rem;
-}
-.budget-table td.money { text-align: right; font-weight: 600; color: var(--navy); }
-.budget-table .total-row td.money { color: var(--orange2); }
+.btbl tbody td { padding:11px 18px; font-size:17px; color:var(--tm); border-bottom:1px solid var(--gray); }
+.btbl tr:nth-child(even) td { background:var(--off); }
+.btbl .srow td { background:var(--orange)!important; color:#fff; font-family:var(--fh); font-weight:700; font-size:16px; text-transform:uppercase; letter-spacing:1px; padding:9px 18px; }
+.btbl .subrow td { background:#e8edf7!important; font-family:var(--fh); font-weight:700; font-size:17px; color:var(--navy); }
+.btbl .trow td { background:var(--navy)!important; color:#fff; font-family:var(--fh); font-weight:800; font-size:20px; }
+.btbl td.money { text-align:right; font-weight:600; color:var(--navy); }
+.btbl .trow td.money { color:var(--org2); }
 
 /* ── CONCLUSION CARDS ── */
-.concl-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; width: 100%; }
-.concl-card {
-  background: var(--white); border: 1px solid var(--gray);
-  border-radius: 10px; padding: 1.4rem 1.6rem;
-  border-left: 5px solid var(--navy);
-  display: flex; align-items: flex-start; gap: 1rem;
+.cgrid { display:grid; grid-template-columns:1fr 1fr; gap:28px; width:100%; }
+.ccard {
+  background:var(--white); border:1px solid var(--gray);
+  border-radius:14px; padding:32px 36px;
+  border-left:6px solid var(--navy);
+  display:flex; align-items:flex-start; gap:24px;
 }
-.concl-card .pct {
-  font-family: var(--font-h); font-weight: 900;
-  font-size: 2.6rem; color: var(--orange); line-height: 1; flex-shrink: 0;
-}
-.concl-card p { font-size: .88rem; color: var(--text-m); line-height: 1.6; padding-top: .4rem; }
+.ccard .pct { font-family:var(--fh); font-weight:900; font-size:58px; color:var(--orange); line-height:1; flex-shrink:0; }
+.ccard p    { font-size:20px; color:var(--tm); line-height:1.6; padding-top:8px; }
 
 /* ── OBJ LIST ── */
-.obj-list { display: flex; flex-direction: column; gap: .8rem; }
-.obj-item { display: flex; gap: 1rem; align-items: flex-start; }
-.obj-num {
-  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
-  background: var(--orange); color: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-h); font-weight: 800; font-size: .8rem;
-}
-.obj-text { font-size: .88rem; color: var(--text-m); line-height: 1.65; padding-top: .1rem; }
-.obj-text strong { color: var(--navy); }
+.olist { display:flex; flex-direction:column; gap:18px; }
+.oitem { display:flex; gap:20px; align-items:flex-start; }
+.onum  { flex-shrink:0; width:36px; height:36px; border-radius:50%; background:var(--orange); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--fh); font-weight:800; font-size:18px; }
+.otxt  { font-size:20px; color:var(--tm); line-height:1.6; padding-top:4px; }
+.otxt strong { color:var(--navy); }
 
-/* ── PROB GRID ── */
-.prob-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.1rem; width: 100%; }
-.prob-card {
-  background: var(--white); border: 1px solid var(--gray);
-  border-radius: 10px; padding: 1.3rem 1.5rem;
-}
-.prob-card .p-icon { font-size: 1.5rem; margin-bottom: .5rem; }
-.prob-card h4 { font-family: var(--font-h); font-size: .93rem; font-weight: 700; color: var(--navy); margin-bottom: .35rem; }
-.prob-card p { font-size: .85rem; color: var(--text-m); line-height: 1.6; }
+/* ── PROB CARDS ── */
+.pgrid { display:grid; grid-template-columns:1fr 1fr; gap:28px; width:100%; }
+.pcard { background:var(--white); border:1px solid var(--gray); border-radius:14px; padding:32px 36px; }
+.pcard .pi { font-size:34px; margin-bottom:12px; }
+.pcard h4  { font-family:var(--fh); font-size:22px; font-weight:700; color:var(--navy); margin-bottom:10px; }
+.pcard p   { font-size:19px; color:var(--tm); line-height:1.6; }
 
-/* ── GLOSS ── */
-.gloss-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .8rem; width: 100%; }
-.gloss-card {
-  background: var(--white); border: 1px solid var(--gray);
-  border-radius: 10px; padding: .9rem 1rem;
-  border-top: 3px solid var(--navy);
-}
-.gloss-card .term { font-family: var(--font-h); font-size: .82rem; font-weight: 700; color: var(--navy); margin-bottom: .25rem; }
-.gloss-card .def  { font-size: .74rem; color: var(--text-m); line-height: 1.5; }
+/* ── BIB LIST ── */
+.bgrid { display:grid; grid-template-columns:1fr 1fr; gap:20px 60px; width:100%; }
+.bitem { font-size:18px; color:var(--tm); line-height:1.65; padding-bottom:16px; border-bottom:1px solid var(--gray); }
 
 /* ── ANIMATIONS ── */
-.slide.active .anim { animation: fadeUp .55s ease both; }
-.slide.active .anim:nth-child(1) { animation-delay: .05s; }
-.slide.active .anim:nth-child(2) { animation-delay: .13s; }
-.slide.active .anim:nth-child(3) { animation-delay: .21s; }
-.slide.active .anim:nth-child(4) { animation-delay: .29s; }
-.slide.active .anim:nth-child(5) { animation-delay: .37s; }
-.slide.active .anim:nth-child(6) { animation-delay: .45s; }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+.slide.active .an { animation: fup .55s ease both; }
+.slide.active .an:nth-child(1){animation-delay:.05s}
+.slide.active .an:nth-child(2){animation-delay:.13s}
+.slide.active .an:nth-child(3){animation-delay:.21s}
+.slide.active .an:nth-child(4){animation-delay:.29s}
+.slide.active .an:nth-child(5){animation-delay:.37s}
+@keyframes fup { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
-/* scrollbars */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--gray); }
-::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
+::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>
+
 <div id="prog-bar"></div>
 <div id="slide-counter"></div>
 
+<div id="nav">
+  <button class="nbtn" id="bp">&#8592;</button>
+  <button class="nbtn" id="bn">&#8594;</button>
+</div>
 
-<div id="slideshow">
+<div id="stage">
 
-<!-- ══════════════════════════════════════
-     SLIDE 1 · PORTADA
-══════════════════════════════════════ -->
-<div class="slide active" id="s1">
-  <div class="left">
-    <div class="logos anim">
-      <div class="logo-placeholder logo-tecnm">TECNM<br><span style="font-weight:400;font-size:.75em">Tecnológico Nacional<br>de México</span></div>
-      <div style="width:1px;height:44px;background:var(--gray)"></div>
-      <div class="logo-placeholder logo-ito">ITO<br><span style="font-weight:400;font-size:.75em">Instituto Tecnológico<br>de Oaxaca</span></div>
+<!-- ══════════════════════════════════════════
+     S1 · PORTADA
+══════════════════════════════════════════ -->
+<div class="slide active" id="s1" style="display:flex;flex-direction:row;background:#fff;">
+
+  <!-- Izquierda blanca -->
+  <div style="flex:1.2;padding:72px 80px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;">
+    <!-- Logos -->
+    <div class="an" style="display:flex;align-items:center;gap:32px;">
+      <div style="border-left:5px solid var(--orange);padding-left:16px;font-family:var(--fh);font-weight:900;color:var(--navy);line-height:1.3;">
+        <div style="font-size:28px;">TECNM</div>
+        <div style="font-size:16px;font-weight:400;">Tecnológico Nacional<br>de México</div>
+      </div>
+      <div style="width:2px;height:60px;background:var(--gray);"></div>
+      <div style="border-left:4px solid var(--navy);padding-left:16px;font-family:var(--fh);font-weight:900;color:var(--navy);line-height:1.3;">
+        <div style="font-size:28px;">ITO</div>
+        <div style="font-size:16px;font-weight:400;">Instituto Tecnológico<br>de Oaxaca</div>
+      </div>
     </div>
+    <!-- Título -->
     <div>
-      <p class="tag anim">Protocolo de Investigación</p>
-      <h1 class="anim">Ciberseguridad para<br>Contador Público en el ITO</h1>
-      <p class="subtitle anim">Diseñar un curso de capacitación en ciberseguridad para la protección de datos personales y la prevención del ciberdelito en estudiantes de la carrera de Contador Público del Instituto Tecnológico de Oaxaca</p>
-      <div class="divider anim"></div>
-      <div class="meta anim">
-        <strong>Bautista Ramírez Amisadai Zuriel · Martínez Miguel Luis Daniel</strong><br>
+      <div class="an" style="font-family:var(--fh);font-weight:700;font-size:20px;color:var(--orange);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">Protocolo de Investigación</div>
+      <h1 class="an" style="font-family:var(--fh);font-weight:900;font-size:88px;color:var(--navy);line-height:1.05;margin-bottom:24px;">Ciberseguridad para<br>Contador Público<br>en el ITO</h1>
+      <p class="an" style="font-size:20px;color:var(--tm);line-height:1.65;max-width:700px;margin-bottom:32px;">Diseñar un curso de capacitación en ciberseguridad para la protección de datos personales y la prevención del ciberdelito en estudiantes de la carrera de Contador Público del Instituto Tecnológico de Oaxaca</p>
+      <div class="an" style="width:90px;height:5px;background:var(--orange);border-radius:3px;margin-bottom:32px;"></div>
+      <div class="an" style="font-size:19px;color:var(--tm);line-height:1.9;">
+        <strong style="color:var(--navy);">Bautista Ramírez Amisadai Zuriel · Martínez Miguel Luis Daniel</strong><br>
         Ing. German Maldonado Velazco &nbsp;|&nbsp; Taller de Investigación I &nbsp;|&nbsp; Febrero–Junio 2026
       </div>
     </div>
   </div>
-  <div class="right">
-    <div class="binary tl">1 0 1 0 1 0 0&#10;1 0 0 0 1 0 1&#10;  1 0 1 0&#10;    1</div>
-    <div class="binary br">0 0 0 0 0 0&#10;1 0 1 0 0 1&#10;  1 0 1 0 1&#10;0 1 0 1 0</div>
-    <div class="shield-wrap anim">
-      <!-- Shield SVG inspired by the image -->
-      <svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Derecha azul marino -->
+  <div style="flex:.8;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+    <!-- Grid decorativo -->
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(255,255,255,.04) 49px,rgba(255,255,255,.04) 50px),repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(255,255,255,.04) 49px,rgba(255,255,255,.04) 50px);"></div>
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 60% 35%,rgba(232,119,34,.22) 0%,transparent 60%);"></div>
+    <!-- Números binarios decorativos -->
+    <div style="position:absolute;top:60px;left:40px;font-family:monospace;font-size:18px;color:rgba(255,255,255,.08);line-height:2;white-space:pre;">1 0 1 0 1 0 0&#10;1 0 0 0 1 0 1&#10;  1 0 1 0&#10;    1 0</div>
+    <div style="position:absolute;bottom:60px;right:40px;font-family:monospace;font-size:18px;color:rgba(255,255,255,.08);line-height:2;white-space:pre;text-align:right;">0 0 0 0 0 0&#10;1 0 1 0 0 1&#10;  1 0 1&#10;0 1 0</div>
+    <!-- Escudo SVG -->
+    <div class="an" style="position:relative;z-index:1;">
+      <svg width="320" height="370" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#f59340"/>
             <stop offset="100%" stop-color="#e87722"/>
           </linearGradient>
         </defs>
-        <!-- outer shield white -->
-        <path d="M100 8 L186 40 L186 110 Q186 175 100 218 Q14 175 14 110 L14 40 Z"
-              fill="white" opacity=".12"/>
-        <!-- main shield orange -->
-        <path d="M100 18 L178 46 L178 112 Q178 170 100 210 Q22 170 22 112 L22 46 Z"
-              fill="url(#sg)"/>
-        <!-- inner navy half -->
-        <path d="M100 18 L178 46 L178 112 Q178 170 100 210 L100 18 Z"
-              fill="#0d2350" opacity=".35"/>
-        <!-- lock body -->
+        <path d="M100 8 L186 40 L186 110 Q186 175 100 218 Q14 175 14 110 L14 40 Z" fill="white" opacity=".1"/>
+        <path d="M100 18 L178 46 L178 112 Q178 170 100 210 Q22 170 22 112 L22 46 Z" fill="url(#sg)"/>
+        <path d="M100 18 L178 46 L178 112 Q178 170 100 210 L100 18 Z" fill="#0d2350" opacity=".32"/>
         <rect x="72" y="112" width="56" height="46" rx="7" fill="white"/>
-        <!-- lock shackle -->
-        <path d="M83 112 L83 96 Q83 72 100 72 Q117 72 117 96 L117 112"
-              stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
-        <!-- keyhole -->
+        <path d="M83 112 L83 96 Q83 72 100 72 Q117 72 117 96 L117 112" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
         <circle cx="100" cy="130" r="8" fill="#e87722"/>
         <rect x="96" y="133" width="8" height="14" rx="2" fill="#e87722"/>
       </svg>
     </div>
-    <div class="right-label anim">ITO · TecNM · 2026</div>
+    <div class="an" style="position:relative;z-index:1;margin-top:32px;font-family:var(--fh);font-size:20px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:4px;text-transform:uppercase;">ITO · TecNM · 2026</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MACRO: header builder helper (rendered per slide)
-══════════════════════════════════════ -->
-
-<!-- SLIDE 2 · ANTECEDENTES HISTÓRICOS -->
-<div class="slide inner-slide" id="s2">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">01 · Antecedentes Históricos</div>
-      <div class="sh-title">Del mainframe al usuario común</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S2 · ANTECEDENTES
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s2">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">01 · Antecedentes Históricos</div><div class="sh-tit">Del mainframe al usuario común</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body">
-    <div class="two-col">
-      <div class="anim" style="display:flex;flex-direction:column;gap:.8rem;">
-        <div>
-          <p class="sec-label">Evolución histórica</p>
-          <div class="card" style="margin-bottom:0">
-            <h3>Orígenes (1971 – 1990s)</h3>
-            <p>El programa <em>Creeper</em> se propagó por ARPANET en 1971 casi como experimento. En los años 80 y 90, los virus viajaban en disquetes y los ataques apuntaban a mainframes corporativos.</p>
-          </div>
+  <div class="obar"></div>
+  <div class="body">
+    <div class="col2" style="align-items:stretch;">
+      <!-- Col izquierda -->
+      <div class="an" style="display:flex;flex-direction:column;gap:20px;">
+        <span class="lbl">Evolución histórica</span>
+        <div class="card" style="flex:1;">
+          <h3>Orígenes (1971 – 1990s)</h3>
+          <p>El programa <em>Creeper</em> se propagó por ARPANET en 1971 casi como experimento. En los años 80 y 90, los virus viajaban en disquetes y los ataques apuntaban a mainframes corporativos.</p>
         </div>
-        <div class="card" style="margin-bottom:0">
+        <div class="card" style="flex:1;">
           <h3>El giro: el usuario común como objetivo</h3>
-          <p>Con la masificación de smartphones y redes sociales, los datos personales —nombre, ubicación, hábitos, contraseñas— se convirtieron en materia prima del cibercrimen organizado. Ya no se atacan infraestructuras: se atacan personas comunes en su vida cotidiana.</p>
+          <p>Con smartphones y redes sociales, los datos personales —nombre, ubicación, hábitos, contraseñas— se convirtieron en materia prima del cibercrimen. Ya no se atacan infraestructuras: se atacan personas.</p>
         </div>
-        <div class="card navy" style="margin-bottom:0;flex:1">
-          <h3>Pandemia de 2020: digitalización sin formación</h3>
-          <p>Las instituciones académicas aceleraron su transición a clases en línea, trámites virtuales y plataformas de gestión escolar sin que esa transición viniera acompañada de formación en ciberseguridad. El resultado es una comunidad que usa tecnología todos los días pero no fue preparada para hacerlo de forma segura. Esa brecha es el punto de partida de este proyecto.</p>
+        <div class="card nv" style="flex:1;">
+          <h3>Pandemia 2020: digitalización sin formación</h3>
+          <p>Las instituciones académicas aceleraron su digitalización sin formación en ciberseguridad. El resultado: una comunidad que usa tecnología a diario pero no fue preparada para hacerlo de forma segura.</p>
         </div>
       </div>
-      <div class="anim" style="display:flex;flex-direction:column;gap:.8rem;">
-        <div>
-          <p class="sec-label">Datos de contexto</p>
-          <div class="stat-grid" style="grid-template-columns:1fr 1fr; gap:.9rem; margin-bottom:.8rem">
-            <div class="stat-box">
-              <div class="s-num">1,600+</div>
-              <div class="s-lbl">ataques de malware por minuto en América Latina (Kaspersky, 2023)</div>
-            </div>
-            <div class="stat-box">
-              <div class="s-num">36 %</div>
-              <div class="s-lbl">de universidades sin sistema de gestión de datos personales (ANUIES, 2023)</div>
-            </div>
-            <div class="stat-box">
-              <div class="s-num">2010</div>
-              <div class="s-lbl">año en que entró en vigor la LFPDPPP en México, actualizada hasta 2025</div>
-            </div>
-            <div class="stat-box">
-              <div class="s-num">2018</div>
-              <div class="s-lbl">GDPR en Europa como referente internacional de protección de datos</div>
-            </div>
-          </div>
+      <!-- Col derecha -->
+      <div class="an" style="display:flex;flex-direction:column;gap:20px;">
+        <span class="lbl">Datos de contexto</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-shrink:0;">
+          <div class="sbox"><div class="sn">1,600+</div><div class="sl">ataques de malware por minuto en LATAM (Kaspersky, 2023)</div></div>
+          <div class="sbox"><div class="sn">36 %</div><div class="sl">universidades sin sistema de gestión de datos personales (ANUIES, 2023)</div></div>
+          <div class="sbox"><div class="sn">2010</div><div class="sl">año en vigor de la LFPDPPP en México, actualizada hasta 2025</div></div>
+          <div class="sbox"><div class="sn">2018</div><div class="sl">GDPR en Europa como referente internacional de protección de datos</div></div>
         </div>
-        <div class="card flat" style="margin-bottom:0;flex:1">
-          <h3>México entre los más afectados de la región</h3>
-          <p>Según el Informe de Amenazas de Kaspersky (2023), México se encuentra entre los países latinoamericanos con mayor número de ataques registrados. Los vectores más frecuentes no son ataques a servidores abstractos: son correos falsos del SAT, perfiles clonados y enlaces trampa que cualquier usuario puede recibir por WhatsApp un martes por la mañana. La respuesta regulatoria llegó, pero su aplicación real en entornos educativos sigue siendo limitada.</p>
+        <div class="card top" style="flex:1;">
+          <h3>México entre los más afectados</h3>
+          <p>Los vectores más frecuentes no son ataques a servidores abstractos: son correos falsos del SAT, perfiles clonados y enlaces trampa recibidos por WhatsApp. La respuesta regulatoria llegó, pero su aplicación en entornos educativos sigue siendo limitada.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SLIDE 3 · PLANTEAMIENTO DEL PROBLEMA -->
-<div class="slide inner-slide" id="s3">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">02 · Planteamiento del Problema</div>
-      <div class="sh-title">Información sensible sin formación para protegerla</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S3 · PLANTEAMIENTO
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s3">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">02 · Planteamiento del Problema</div><div class="sh-tit">Información sensible sin formación para protegerla</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="flex-direction:column; gap:1rem;">
-    <div class="prob-grid anim">
-      <div class="prob-card">
-        <div class="p-icon">🎣</div>
+  <div class="obar"></div>
+  <div class="body col1" style="gap:24px;">
+    <div class="pgrid an" style="flex:1;">
+      <div class="pcard">
+        <div class="pi">🎣</div>
         <h4>Phishing dirigido a información fiscal</h4>
-        <p>El SAT, instituciones bancarias y software contable son los más suplantados en México. Un estudiante sin formación queda expuesto antes de titularse.</p>
+        <p>El SAT, bancos y software contable son los más suplantados en México. El Servicio de Administración Tributaria ha emitido alertas recurrentes sobre correos y mensajes fraudulentos. Un estudiante sin formación queda expuesto antes de titularse.</p>
       </div>
-      <div class="prob-card">
-        <div class="p-icon">🔑</div>
+      <div class="pcard">
+        <div class="pi">🔑</div>
         <h4>Reutilización de contraseñas</h4>
-        <p>El 65 % de los usuarios reutiliza contraseñas (Google & Harris Poll, 2019). Una cuenta personal comprometida expone también la institucional.</p>
+        <p>El 65 % de los usuarios reutiliza contraseñas entre plataformas (Google & Harris Poll, 2019). Usar la misma contraseña en redes sociales, correo personal y sistemas del Instituto expone todas las cuentas si una es comprometida.</p>
       </div>
-      <div class="prob-card">
-        <div class="p-icon">📂</div>
+      <div class="pcard">
+        <div class="pi">📂</div>
         <h4>Exposición de datos de terceros</h4>
-        <p>En prácticas profesionales los estudiantes trabajan con datos reales de empresas. Almacenarlos sin cifrado en dispositivos personales tiene implicaciones bajo la LFPDPPP.</p>
+        <p>En prácticas profesionales los estudiantes trabajan con datos reales de empresas. Almacenarlos sin cifrado en dispositivos personales o compartirlos por canales no seguros tiene implicaciones legales bajo la LFPDPPP.</p>
       </div>
-      <div class="prob-card">
-        <div class="p-icon">⚖️</div>
+      <div class="pcard">
+        <div class="pi">⚖️</div>
         <h4>Desconocimiento del marco legal</h4>
-        <p>El Código de Ética del IMCP obliga a la confidencialidad, pero los estudiantes rara vez relacionan ese principio con sus prácticas digitales cotidianas.</p>
+        <p>El Código de Ética del IMCP establece la obligación de confidencialidad sobre la información de los clientes. Sin embargo, los estudiantes rara vez conocen cómo ese principio se traduce en prácticas digitales concretas.</p>
       </div>
     </div>
-    <div class="card anim" style="border-left-color:var(--navy); margin-bottom:0">
-      <p style="font-family:var(--font-h);font-weight:700;color:var(--navy);font-size:.88rem">
-        El problema central no es tecnológico: es que estos estudiantes están siendo formados para manejar información sensible sin recibir formación paralela sobre cómo protegerla.
-      </p>
+    <div class="an" style="background:var(--navy);border-radius:14px;padding:28px 40px;flex-shrink:0;">
+      <p style="font-family:var(--fh);font-weight:700;font-size:22px;color:#fff;text-align:center;">El problema central no es tecnológico: es que estos estudiantes están siendo formados para manejar información sensible sin recibir formación paralela sobre cómo protegerla.</p>
     </div>
   </div>
 </div>
 
-<!-- SLIDE 4 · OBJETIVO GENERAL + ESPECÍFICOS -->
-<div class="slide inner-slide" id="s4">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">03 – 04 · Objetivos</div>
-      <div class="sh-title">General y específicos</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S4 · OBJETIVOS
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s4">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">03 – 04 · Objetivos</div><div class="sh-tit">General y específicos</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body">
-    <div class="two-col">
-      <div class="anim" style="display:flex;flex-direction:column;gap:.8rem;">
-        <p class="sec-label">Objetivo General</p>
-        <div class="card" style="border-left-color:var(--navy);flex:1;margin-bottom:0;display:flex;flex-direction:column;justify-content:center">
-          <p style="font-size:.92rem;line-height:1.8;color:var(--text-d)">
-            Desarrollar una <strong>propuesta formativa en ciberseguridad</strong> para estudiantes de Contador Público del ITO, orientada a fortalecer sus capacidades para resguardar información personal y financiera, identificar las amenazas digitales más comunes en su entorno profesional y cotidiano, y conocer el <strong>marco normativo</strong> que regula el manejo de datos personales, con el propósito de disminuir su exposición al riesgo en los distintos contextos digitales en los que se desenvuelven.
-          </p>
+  <div class="obar"></div>
+  <div class="body">
+    <div class="col2" style="align-items:stretch;">
+      <div class="an" style="display:flex;flex-direction:column;gap:16px;">
+        <span class="lbl">Objetivo General</span>
+        <div class="card nv" style="flex:1;display:flex;align-items:center;">
+          <p style="font-size:21px;line-height:1.75;color:var(--td);">Desarrollar una <strong>propuesta formativa en ciberseguridad</strong> para estudiantes de Contador Público del ITO, orientada a fortalecer sus capacidades para resguardar información personal y financiera, identificar las amenazas digitales más comunes en su entorno profesional y cotidiano, y conocer el <strong>marco normativo</strong> que regula el manejo de datos personales, con el propósito de disminuir su exposición al riesgo en los distintos contextos digitales en los que se desenvuelven.</p>
         </div>
       </div>
-      <div class="anim" style="display:flex;flex-direction:column;gap:.8rem;">
-        <p class="sec-label">Objetivos Específicos</p>
-        <div class="obj-list" style="flex:1">
-          <div class="obj-item">
-            <div class="obj-num">1</div>
-            <p class="obj-text"><strong>Diagnosticar</strong> el nivel de conocimiento actual aplicando encuestas a estudiantes de Contador Público del ITO para identificar qué amenazas conocen, qué prácticas tienen y en qué áreas hay mayor vulnerabilidad considerando el perfil de su carrera.</p>
+      <div class="an" style="display:flex;flex-direction:column;gap:16px;">
+        <span class="lbl">Objetivos Específicos</span>
+        <div class="olist" style="flex:1;justify-content:space-around;display:flex;flex-direction:column;">
+          <div class="oitem">
+            <div class="onum">1</div>
+            <p class="otxt"><strong>Diagnosticar</strong> el nivel de conocimiento actual aplicando encuestas a estudiantes de Contador Público del ITO para identificar qué amenazas conocen, qué prácticas tienen y en qué áreas hay mayor vulnerabilidad.</p>
           </div>
-          <div class="obj-item">
-            <div class="obj-num">2</div>
-            <p class="obj-text"><strong>Identificar</strong> los vectores de ataque más relevantes para el perfil contable: phishing que suplanta al SAT o instituciones bancarias, robo de credenciales de software contable, fraudes en comercio electrónico y exposición inadvertida de datos de clientes.</p>
+          <div class="oitem">
+            <div class="onum">2</div>
+            <p class="otxt"><strong>Identificar</strong> los vectores de ataque más relevantes: phishing que suplanta al SAT o bancos, robo de credenciales de software contable, fraudes en comercio electrónico y exposición de datos de clientes.</p>
           </div>
-          <div class="obj-item">
-            <div class="obj-num">3</div>
-            <p class="obj-text"><strong>Definir el contenido</strong> del curso estructurando módulos, temas y objetivos de aprendizaje que respondan a los problemas detectados, cubriendo el entorno institucional y las plataformas de uso cotidiano.</p>
+          <div class="oitem">
+            <div class="onum">3</div>
+            <p class="otxt"><strong>Definir el contenido</strong> del curso estructurando módulos, temas y objetivos de aprendizaje que respondan a los problemas detectados, cubriendo el entorno institucional y las plataformas de uso cotidiano.</p>
           </div>
-          <div class="obj-item">
-            <div class="obj-num">4</div>
-            <p class="obj-text"><strong>Adaptar</strong> ejemplos, casos y materiales al contexto del estudiante: situaciones con software CONTPAQi, declaraciones fiscales, manejo de información de clientes en prácticas profesionales y uso de herramientas digitales en trabajo colaborativo.</p>
+          <div class="oitem">
+            <div class="onum">4</div>
+            <p class="otxt"><strong>Adaptar</strong> ejemplos, casos y materiales al contexto del estudiante: CONTPAQi, declaraciones fiscales, manejo de datos de clientes en prácticas profesionales y herramientas digitales compartidas.</p>
           </div>
         </div>
       </div>
@@ -573,369 +426,431 @@ html, body {
   </div>
 </div>
 
-<!-- SLIDE 5 · JUSTIFICACIÓN -->
-<div class="slide inner-slide" id="s5">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">05 · Justificación</div>
-      <div class="sh-title">¿Por qué ahora y por qué aquí?</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S5 · JUSTIFICACIÓN
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s5">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">05 · Justificación</div><div class="sh-tit">¿Por qué ahora y por qué aquí?</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="flex-direction:column; gap:1rem;">
-    <div class="stat-grid anim">
-      <div class="stat-box">
-        <div class="s-num">0</div>
-        <div class="s-lbl">Materias sobre ciberseguridad en el plan de estudios de Contador Público del TecNM</div>
-      </div>
-      <div class="stat-box">
-        <div class="s-num">1°</div>
-        <div class="s-lbl">contacto con datos fiscales reales desde las primeras prácticas, antes de titularse</div>
-      </div>
-      <div class="stat-box">
-        <div class="s-num">1,600+</div>
-        <div class="s-lbl">incidentes de malware por minuto en LATAM (Kaspersky, 2023)</div>
-      </div>
-      <div class="stat-box">
-        <div class="s-num">2010</div>
-        <div class="s-lbl">desde cuando aplica la LFPDPPP, incluyendo practicantes y estudiantes en contacto con datos</div>
-      </div>
+  <div class="obar"></div>
+  <div class="body col1" style="gap:28px;">
+    <div class="an" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;flex-shrink:0;">
+      <div class="sbox"><div class="sn">0</div><div class="sl">materias sobre ciberseguridad en el plan de estudios de Contador Público del TecNM</div></div>
+      <div class="sbox"><div class="sn">1°</div><div class="sl">contacto con datos fiscales reales desde las primeras prácticas, antes de titularse</div></div>
+      <div class="sbox"><div class="sn">1,600+</div><div class="sl">incidentes de malware por minuto en LATAM (Kaspersky, 2023)</div></div>
+      <div class="sbox"><div class="sn">2010</div><div class="sl">desde cuando aplica la LFPDPPP, incluyendo practicantes en contacto con datos reales</div></div>
     </div>
-    <div class="two-col anim" style="gap:1rem; flex:1">
-      <div class="card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:center">
+    <div class="an col2" style="flex:1;gap:28px;">
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
         <h3>Obligación legal desde el primer contacto</h3>
-        <p>La LFPDPPP establece que quienes manejan datos personales deben implementar medidas de seguridad para protegerlos. El Código de Ética del IMCP obliga a los contadores a mantener la confidencialidad de la información de sus clientes. <strong>Ambas normas aplican desde que el estudiante tiene su primer contacto profesional con datos reales, no a partir de la titulación.</strong></p>
+        <p>La LFPDPPP establece que quienes manejan datos personales deben implementar medidas de seguridad. El Código de Ética del IMCP obliga a mantener la confidencialidad de la información de los clientes. <strong>Ambas normas aplican desde el primer contacto profesional con datos reales, no a partir de la titulación.</strong></p>
       </div>
-      <div class="card navy" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:center">
+      <div class="card nv" style="display:flex;flex-direction:column;justify-content:center;">
         <h3>Argumento práctico e inmediato</h3>
-        <p>Un estudiante que sabe identificar un correo falso del SAT, que no reutiliza contraseñas entre su correo personal y el software contable de sus prácticas, y que sabe cómo almacenar de forma segura archivos con información de clientes, <strong>reduce de manera real y concreta el riesgo de un incidente</strong>: para él mismo y para las empresas o personas que ya le confían su información.</p>
+        <p>Un estudiante que sabe identificar un correo falso del SAT, que no reutiliza contraseñas entre su correo personal y el software contable de sus prácticas, y que sabe almacenar de forma segura archivos con información de clientes, <strong>reduce de manera real el riesgo de un incidente</strong> para él y para quienes ya le confían su información.</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- SLIDE 6 · METODOLOGÍA -->
-<div class="slide inner-slide" id="s6">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">06 · Metodología</div>
-      <div class="sh-title">Diseño de la investigación</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S6 · METODOLOGÍA – ANTECEDENTES
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s6">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">06 · Metodología</div><div class="sh-tit">Antecedentes de la investigación</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; padding:1.1rem 2rem 1.4rem; overflow:hidden;">
+  <div class="obar"></div>
+  <div class="body col1" style="gap:24px;">
 
-    <!-- Columna izquierda -->
-    <div class="anim" style="display:flex; flex-direction:column; gap:.55rem; overflow:hidden;">
-
-      <div>
-        <p style="font-family:var(--font-h);font-weight:700;font-size:.63rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;">Nivel de la investigación</p>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.75rem 1rem;border-left:4px solid var(--orange)">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.25rem;">Nivel 2 – Propositivo</p>
-          <p style="font-size:.76rem;line-height:1.55;color:var(--text-m)">No se limita a describir: avanza del diagnóstico del conocimiento en ciberseguridad hacia una <strong>propuesta concreta de intervención</strong>. Sin diagnóstico no hay curso, y sin curso el diagnóstico no tiene utilidad práctica.</p>
-        </div>
-      </div>
-
-      <div>
-        <p style="font-family:var(--font-h);font-weight:700;font-size:.63rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;">Tipo de investigación</p>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.65rem 1rem;border-left:4px solid var(--orange);margin-bottom:.45rem">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.2rem;">Descriptivo</p>
-          <p style="font-size:.76rem;line-height:1.5;color:var(--text-m)">Caracteriza el nivel de conocimiento y hábitos digitales tal como existen, sin intervenir ni manipular las condiciones observadas.</p>
-        </div>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.65rem 1rem;border-left:4px solid var(--orange)">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.2rem;">No experimental y transversal</p>
-          <p style="font-size:.76rem;line-height:1.5;color:var(--text-m)">Recolección en un momento único y definido. Permite diagnóstico claro del estado actual sin seguimiento longitudinal.</p>
-        </div>
-      </div>
-
-      <div>
-        <p style="font-family:var(--font-h);font-weight:700;font-size:.63rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;">Método de la investigación</p>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.65rem 1rem;border-left:4px solid var(--navy);margin-bottom:.45rem">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.2rem;">Hipotético-deductivo</p>
-          <p style="font-size:.76rem;line-height:1.5;color:var(--text-m)">De lo general —literatura, patrones de ataque en México, perfil de vulnerabilidad— a lo particular: hipótesis verificada con el cuestionario diagnóstico.</p>
-        </div>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.65rem 1rem;border-left:4px solid var(--navy)">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.2rem;">Analítico</p>
-          <p style="font-size:.76rem;line-height:1.5;color:var(--text-m)">Descompone resultados por sección temática (phishing, contraseñas, datos, herramientas, marco legal) para identificar dónde hay mayor vulnerabilidad.</p>
-        </div>
-      </div>
-
+    <!-- Intro -->
+    <div class="an" style="background:var(--navy);border-radius:14px;padding:24px 44px;flex-shrink:0;">
+      <p style="font-size:20px;color:#fff;line-height:1.65;">La ciberseguridad en entornos educativos mexicanos ha sido documentada con creciente preocupación en los últimos años. Los siguientes estudios conforman la base documental de esta investigación.</p>
     </div>
 
-    <!-- Columna derecha -->
-    <div class="anim" style="display:flex; flex-direction:column; gap:.55rem; overflow:hidden;">
+    <!-- Estudios -->
+    <div class="an" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;">
 
-      <div>
-        <p style="font-family:var(--font-h);font-weight:700;font-size:.63rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;">Instrumento – Cuestionario diagnóstico</p>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.75rem 1rem;border-left:4px solid var(--orange)">
-          <p style="font-family:var(--font-h);font-size:.78rem;font-weight:700;color:var(--navy);margin-bottom:.3rem;">18 preguntas en 5 secciones temáticas</p>
-          <ul style="padding-left:1rem;margin-bottom:.35rem">
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Reconocimiento de phishing – <strong>4 preguntas</strong></li>
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Gestión de contraseñas – <strong>3 preguntas</strong></li>
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Protección de datos en plataformas – <strong>3 preguntas</strong></li>
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Uso de herramientas colaborativas – <strong>3 preguntas</strong></li>
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Conocimiento del marco legal – <strong>4 preguntas</strong></li>
-            <li style="font-size:.75rem;line-height:1.55;color:var(--text-m)">Pregunta adicional: semestre en curso</li>
-          </ul>
-          <p style="font-size:.74rem;color:var(--text-m);font-style:italic">Opción múltiple + escala 1–5 · Anónimo · En línea</p>
-        </div>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--orange);display:flex;flex-direction:column;gap:10px;">
+        <p style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--orange);letter-spacing:1px;text-transform:uppercase;">ANUIES – Diagnóstico 2023</p>
+        <p style="font-size:20px;font-weight:700;font-family:var(--fh);color:var(--navy);">Gestión de datos personales en instituciones de educación superior</p>
+        <p style="font-size:18px;line-height:1.65;color:var(--tm);">El <strong>36 %</strong> de las universidades del país no contaba con un sistema de gestión de datos personales. Las principales razones: falta de presupuesto (<strong>18 %</strong>) y ausencia de personal capacitado (<strong>17 %</strong>). Esto coloca a las instituciones educativas entre los blancos más vulnerables del cibercrimen organizado.</p>
       </div>
 
-      <div style="flex:1;display:flex;flex-direction:column;">
-        <p style="font-family:var(--font-h);font-weight:700;font-size:.63rem;color:var(--orange);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem;">5 etapas de desarrollo del proyecto</p>
-        <div style="background:var(--white);border:1px solid var(--gray);border-radius:8px;padding:.75rem 1rem;flex:1;display:flex;flex-direction:column;justify-content:space-around;">
-          <div style="display:flex;gap:.8rem;align-items:flex-start">
-            <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.72rem;">1</div>
-            <div><p style="font-family:var(--font-h);font-size:.77rem;font-weight:700;color:var(--navy)">Diagnóstico</p><p style="font-size:.73rem;color:var(--text-m);line-height:1.4">Formulación de hipótesis, diseño y aplicación del cuestionario.</p></div>
-          </div>
-          <div style="display:flex;gap:.8rem;align-items:flex-start">
-            <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.72rem;">2</div>
-            <div><p style="font-family:var(--font-h);font-size:.77rem;font-weight:700;color:var(--navy)">Análisis de resultados</p><p style="font-size:.73rem;color:var(--text-m);line-height:1.4">Identificación de áreas con mayor desconocimiento y amenazas más frecuentes.</p></div>
-          </div>
-          <div style="display:flex;gap:.8rem;align-items:flex-start">
-            <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.72rem;">3</div>
-            <div><p style="font-family:var(--font-h);font-size:.77rem;font-weight:700;color:var(--navy)">Diseño del curso</p><p style="font-size:.73rem;color:var(--text-m);line-height:1.4">Módulos, materiales y actividades adaptados al contexto del estudiante.</p></div>
-          </div>
-          <div style="display:flex;gap:.8rem;align-items:flex-start">
-            <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.72rem;">4</div>
-            <div><p style="font-family:var(--font-h);font-size:.77rem;font-weight:700;color:var(--navy)">Elaboración del presupuesto</p><p style="font-size:.73rem;color:var(--text-m);line-height:1.4">Recursos humanos, tecnológicos y materiales para el formato en línea.</p></div>
-          </div>
-          <div style="display:flex;gap:.8rem;align-items:flex-start">
-            <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-weight:800;font-size:.72rem;">5</div>
-            <div><p style="font-family:var(--font-h);font-size:.77rem;font-weight:700;color:var(--navy)">Revisión y entrega</p><p style="font-size:.73rem;color:var(--text-m);line-height:1.4">Incorporación de observaciones y presentación del protocolo completo.</p></div>
-          </div>
-        </div>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--orange);display:flex;flex-direction:column;gap:10px;">
+        <p style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--orange);letter-spacing:1px;text-transform:uppercase;">Kaspersky – Informe de Amenazas LATAM 2023</p>
+        <p style="font-size:20px;font-weight:700;font-family:var(--fh);color:var(--navy);">Ataques registrados en América Latina</p>
+        <p style="font-size:18px;line-height:1.65;color:var(--tm);">México fue uno de los países de la región con mayor número de intentos de ataque registrados ese año, con más de <strong>1,600 incidentes de malware por minuto</strong>. Los vectores más frecuentes: correos falsos del SAT, credenciales reutilizadas y enlaces trampa recibidos por mensajería instantánea.</p>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--navy);display:flex;flex-direction:column;gap:10px;">
+        <p style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--navy);letter-spacing:1px;text-transform:uppercase;">IFT – ENDUTIH 2023</p>
+        <p style="font-size:20px;font-weight:700;font-family:var(--fh);color:var(--navy);">Encuesta Nacional sobre Disponibilidad y Uso de Tecnologías de la Información en los Hogares</p>
+        <p style="font-size:18px;line-height:1.65;color:var(--tm);">La mayoría de los usuarios jóvenes adquieren sus hábitos digitales de forma <strong>autodidacta y sin formación estructurada en seguridad</strong>. No existe un acompañamiento formal que vaya a la par del uso cotidiano de la tecnología.</p>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--navy);display:flex;flex-direction:column;gap:10px;">
+        <p style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--navy);letter-spacing:1px;text-transform:uppercase;">Contexto institucional</p>
+        <p style="font-size:20px;font-weight:700;font-family:var(--fh);color:var(--navy);">El riesgo no se limita a los sistemas institucionales</p>
+        <p style="font-size:18px;line-height:1.65;color:var(--tm);">Los estudiantes de Contador Público interactúan a diario con redes sociales, mensajería, banca en línea y aplicaciones de terceros. Una cuenta de WhatsApp comprometida o credenciales reutilizadas entre Spotify y el correo institucional pueden tener consecuencias tan graves como un ataque directo a los sistemas del ITO.</p>
       </div>
 
     </div>
   </div>
 </div>
 
-<!-- SLIDE 7 · DISEÑO DEL CURSO -->
-<div class="slide inner-slide" id="s7">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">07 · Diseño del Curso</div>
-      <div class="sh-title">5 módulos · 100% en línea · Sin conocimientos técnicos previos</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
+<!-- ══════════════════════════════════════════
+     S7 · METODOLOGÍA – DISEÑO DE LA INVESTIGACIÓN
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s7">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">07 · Metodología</div><div class="sh-tit">Diseño de la investigación</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
   </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="flex-direction:column; gap:1rem;">
-    <div class="module-grid anim">
-      <div class="mod-card">
-        <div class="m-num">Módulo 1</div>
-        <div class="m-icon">🎯</div>
-        <h4>¿Por qué un contador necesita ciberseguridad?</h4>
-        <p>Datos fiscales como blanco, amenazas frecuentes en México, diferencia entre riesgo institucional y personal.</p>
-      </div>
-      <div class="mod-card">
-        <div class="m-num">Módulo 2</div>
-        <div class="m-icon">🎣</div>
-        <h4>Phishing e ingeniería social</h4>
-        <p>Anatomía de un correo falso del SAT, protocolo de verificación en 3 pasos, qué hacer si ya se hizo clic.</p>
-      </div>
-      <div class="mod-card">
-        <div class="m-num">Módulo 3</div>
-        <div class="m-icon">🔐</div>
-        <h4>Contraseñas y autenticación</h4>
-        <p>Gestores (Bitwarden, KeePass), 2FA, ataques de fuerza bruta y acciones ante una cuenta comprometida.</p>
-      </div>
-      <div class="mod-card">
-        <div class="m-num">Módulo 4</div>
-        <div class="m-icon">📊</div>
-        <h4>Protección de datos del contador</h4>
-        <p>Cifrado, permisos en Google Drive, riesgos de WhatsApp para datos de clientes, WiFi pública y VPN.</p>
-      </div>
-      <div class="mod-card">
-        <div class="m-num">Módulo 5</div>
-        <div class="m-icon">⚖️</div>
-        <h4>Marco legal: LFPDPPP e IMCP</h4>
-        <p>Obligaciones desde las prácticas, derechos ARCO, aviso de privacidad, INAI y Policía Cibernética.</p>
-      </div>
-    </div>
-    <div class="card anim" style="margin-bottom:0; border-left-color:var(--navy); flex:1; display:flex; align-items:center">
-      <p style="font-size:.9rem; color:var(--text-m); line-height:1.7">
-        <strong style="color:var(--navy)">Cada módulo incluye:</strong> objetivo de aprendizaje específico · contenido teórico · ejemplos prácticos adaptados al contexto del estudiante de Contaduría oaxaqueño (CONTPAQi, SAT, IMSS, despachos contables) · actividad de verificación al cierre. La secuencia avanza de la comprensión del riesgo hasta el marco legal, pasando por las habilidades más urgentes que el diagnóstico identificó. El formato es <strong>100 % en línea</strong>, a ritmo propio, accesible para cualquier semestre sin requisitos previos.
-      </p>
-    </div>
-  </div>
-</div>
+  <div class="obar"></div>
+  <div class="body" style="gap:40px;">
 
-<!-- SLIDE 8 · PRESUPUESTO -->
-<div class="slide inner-slide" id="s8">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">08 · Presupuesto</div>
-      <div class="sh-title">Recursos estimados para la implementación</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
-  </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="padding-bottom:1.4rem;">
-    <div class="budget-wrap anim">
-      <table class="budget-table">
-        <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Concepto</th>
-            <th>Cantidad</th>
-            <th style="text-align:right">Costo unitario</th>
-            <th style="text-align:right">Total (MXN)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="section-row"><td colspan="5">GASTOS CORRIENTES</td></tr>
-          <tr><td>Servicios</td><td>Energía eléctrica (uso de equipo 1 mes)</td><td>4</td><td class="money">$400.00</td><td class="money">$1,600.00</td></tr>
-          <tr><td>Servicios</td><td>Internet (mes)</td><td>4</td><td class="money">$400.00</td><td class="money">$1,600.00</td></tr>
-          <tr><td>Servicios</td><td>Recarga celular</td><td>4</td><td class="money">$200.00</td><td class="money">$800.00</td></tr>
-          <tr><td>Viáticos</td><td>Transporte local – gasolina por semana (encuestas / aplicación)</td><td>12</td><td class="money">$400.00</td><td class="money">$4,800.00</td></tr>
-          <tr><td>Servicios</td><td>Cambio de neumático</td><td>1</td><td class="money">$2,150.00</td><td class="money">$2,150.00</td></tr>
-          <tr><td>Insumos</td><td>Impresiones y copias</td><td>200</td><td class="money">$1.00</td><td class="money">$200.00</td></tr>
-          <tr><td>Insumos</td><td>Encuadernación de proyecto</td><td>2</td><td class="money">$150.00</td><td class="money">$300.00</td></tr>
-          <tr><td>Consumibles</td><td>Material de oficina (plumas, libretas, etc.)</td><td>1</td><td class="money">$300.00</td><td class="money">$300.00</td></tr>
-          <tr><td>Equipamiento</td><td>Memoria USB</td><td>2</td><td class="money">$150.00</td><td class="money">$300.00</td></tr>
-          <tr><td>Software</td><td>Licencias básicas (Office 365)</td><td>1</td><td class="money">$1,239.00</td><td class="money">$1,239.00</td></tr>
-          <tr><td>Material didáctico</td><td>Libros o recursos digitales</td><td>2</td><td class="money">$300.00</td><td class="money">$600.00</td></tr>
-          <tr style="background:var(--offwhite)"><td colspan="4" style="font-family:var(--font-h);font-weight:700;color:var(--navy);font-size:.78rem">Subtotal gasto corriente</td><td class="money" style="font-family:var(--font-h);font-weight:700;color:var(--navy)">$13,889.00</td></tr>
-
-          <tr class="section-row"><td colspan="5">GASTOS DE INVERSIÓN</td></tr>
-          <tr><td>Equipamiento</td><td>Laptop</td><td>2</td><td class="money">$20,000.00</td><td class="money">$40,000.00</td></tr>
-          <tr><td>Equipamiento</td><td>Proyector</td><td>1</td><td class="money">$4,000.00</td><td class="money">$4,000.00</td></tr>
-          <tr><td>Equipamiento</td><td>Disco duro externo</td><td>1</td><td class="money">$1,200.00</td><td class="money">$1,200.00</td></tr>
-          <tr><td>Equipamiento</td><td>Escritorios</td><td>2</td><td class="money">$1,800.00</td><td class="money">$3,600.00</td></tr>
-          <tr><td>Equipamiento</td><td>Sillas</td><td>2</td><td class="money">$1,200.00</td><td class="money">$2,400.00</td></tr>
-          <tr><td>Equipamiento</td><td>Impresora Brother DCP-T730DW</td><td>1</td><td class="money">$3,829.00</td><td class="money">$3,829.00</td></tr>
-          <tr><td>Equipamiento</td><td>Regulador de voltaje</td><td>1</td><td class="money">$771.04</td><td class="money">$771.04</td></tr>
-          <tr><td>Equipamiento</td><td>Monitor</td><td>1</td><td class="money">$2,819.00</td><td class="money">$2,819.00</td></tr>
-          <tr style="background:var(--offwhite)"><td colspan="4" style="font-family:var(--font-h);font-weight:700;color:var(--navy);font-size:.78rem">Subtotal gasto inversión</td><td class="money" style="font-family:var(--font-h);font-weight:700;color:var(--navy)">$58,619.04</td></tr>
-
-          <tr class="total-row">
-            <td colspan="4" style="font-size:.9rem">GRAN TOTAL</td>
-            <td class="money" style="font-size:.9rem">$72,508.04</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- SLIDE 9 · CONCLUSIONES -->
-<div class="slide inner-slide" id="s9">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">09 · Conclusiones</div>
-      <div class="sh-title">Los datos hablan por sí solos</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
-  </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="flex-direction:column; gap:1rem;">
-    <div class="concl-grid anim" style="flex:1">
-      <div class="concl-card">
-        <div class="pct">72 %</div>
-        <p>reutiliza la misma contraseña en múltiples plataformas, incluyendo correo institucional y redes sociales.</p>
-      </div>
-      <div class="concl-card">
-        <div class="pct">52 %</div>
-        <p>de quienes trabajan con información financiera de clientes la almacena sin ningún tipo de protección en sus dispositivos.</p>
-      </div>
-      <div class="concl-card">
-        <div class="pct">83 %</div>
-        <p>no conoce el contenido de la LFPDPPP más allá del nombre, a pesar de que ya aplica a su actividad como practicantes.</p>
-      </div>
-      <div class="concl-card">
-        <div class="pct">44 %</div>
-        <p>nunca había relacionado la obligación de confidencialidad del IMCP con sus herramientas digitales cotidianas.</p>
-      </div>
-    </div>
-    <div class="two-col anim" style="gap:1rem; flex:1">
-      <div class="card" style="border-left-color:var(--navy); margin-bottom:0; display:flex; flex-direction:column; justify-content:center">
-        <h3>El conocimiento teórico existe — falta convertirlo en hábito</h3>
-        <p>El <strong>78 %</strong> identifica correctamente una contraseña segura. El <strong>76 %</strong> reconoce un dominio falso cuando se presenta de forma explícita. El <strong>81 %</strong> sabe que Google Drive tiene configuraciones de permisos. <strong>El problema no es de capacidad: es que ese conocimiento no se ha convertido en hábito. Ahí es donde el curso interviene.</strong></p>
-      </div>
-      <div class="card" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:center">
-        <h3>Resultado esperado al concluir los 5 módulos</h3>
-        <p>El estudiante sabrá identificar un correo falso del SAT, usará contraseñas distintas para su correo institucional y sus redes sociales, configurará correctamente los permisos de los archivos que comparte con su equipo, y entenderá qué obligaciones legales ya tiene sobre los datos que maneja. Eso es suficiente para reducir de forma concreta su exposición al riesgo.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SLIDE 10 · BIBLIOGRAFÍA -->
-<div class="slide inner-slide" id="s10">
-  <div class="slide-header anim">
-    <div>
-      <div class="sh-tag">10 · Bibliografía</div>
-      <div class="sh-title">Fuentes consultadas (APA 7)</div>
-    </div>
-    <div class="sh-right"><span class="sh-logo-small">ITO · TecNM</span></div>
-  </div>
-  <div class="orange-bar"></div>
-  <div class="slide-body" style="align-items:flex-start">
-    <div style="width:100%; overflow-y:auto; max-height:100%;">
-      <div class="card anim" style="border-left-color:var(--navy)">
-        <ul style="list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:.6rem 2rem">
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Asociación de Internet MX. (2023, 7 de noviembre). <em>Estudio de Ciberseguridad México 2023.</em> Presentado en el Senado de la República.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Cámara de Diputados. (2010, reform. 2025). <em>Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</em> Diario Oficial de la Federación.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            El Financiero. (2025, 10 de marzo). <em>SAT vulnerado: fraude de ciberseguridad afecta cuentas autorizadas.</em> El Financiero.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Google & Harris Poll. (2019). <em>Online Security Survey.</em>
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Instituto Mexicano de Contadores Públicos. (2024). <em>Código de Ética Profesional</em> (12.ª ed.). IMCP.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Instituto de Transparencia del Estado de México. (2024). <em>Phishing, amenaza cibernética más extendida en México.</em> Infoem.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Kaspersky. (2023, octubre). <em>Ataques de ransomware superan 1.1 millones de intentos en América Latina.</em> Kaspersky LATAM.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Servicio de Administración Tributaria. (2023). <em>Alertas sobre correos y mensajes falsos que suplantan al SAT.</em> Gobierno de México.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55;padding-bottom:.5rem;border-bottom:1px solid var(--gray)">
-            Tecnológico Nacional de México. (2010). <em>Retícula de la carrera de Contador Público.</em> TecNM.
-          </li>
-          <li style="font-size:.78rem;color:var(--text-m);line-height:1.55">
-            Yucatán.com.mx. (2025, 28 de diciembre). <em>Hackeo al SAT: venden 120 mil facturas con datos bancarios y fiscales tras ciberataque.</em>
-          </li>
+    <!-- Columna izquierda: Instrumento 1 – Cuestionario -->
+    <div class="an" style="flex:1;display:flex;flex-direction:column;gap:20px;">
+      <span class="lbl">Instrumento 1 – Cuestionario diagnóstico</span>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--orange);">
+        <p style="font-family:var(--fh);font-size:21px;font-weight:700;color:var(--navy);margin-bottom:14px;">18 preguntas distribuidas en 5 secciones temáticas</p>
+        <ul style="padding-left:24px;margin-bottom:14px;">
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Reconocimiento de phishing – <strong>4 preguntas</strong></li>
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Gestión de contraseñas – <strong>3 preguntas</strong></li>
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Protección de datos en plataformas – <strong>3 preguntas</strong></li>
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Uso de herramientas colaborativas – <strong>3 preguntas</strong></li>
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Conocimiento del marco legal – <strong>4 preguntas</strong></li>
+          <li style="font-size:19px;line-height:1.75;color:var(--tm);">Pregunta adicional: semestre en curso del participante</li>
         </ul>
+        <p style="font-size:18px;color:var(--tm);font-style:italic;">Opción múltiple + escala 1–5 · Aplicado de forma anónima en línea</p>
+      </div>
+      <div style="background:var(--off);border:1px solid var(--gray);border-radius:14px;padding:22px 32px;">
+        <p style="font-size:18px;line-height:1.65;color:var(--tm);">Una pregunta adicional recaba el <strong>semestre en curso</strong> del participante, lo que permite analizar si el nivel de conocimiento varía con el avance en la carrera.</p>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Instrumento 2 – Curso -->
+    <div class="an" style="flex:1;display:flex;flex-direction:column;gap:20px;">
+      <span class="lbl">Instrumento 2 – Curso de capacitación</span>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--navy);flex:1;">
+        <p style="font-family:var(--fh);font-size:21px;font-weight:700;color:var(--navy);margin-bottom:14px;">Diseñado a partir de los resultados del cuestionario</p>
+        <p style="font-size:19px;line-height:1.65;color:var(--tm);margin-bottom:18px;">El curso se organiza en <strong>cinco módulos secuenciales</strong>. Cada módulo incluye objetivos de aprendizaje específicos, contenido teórico, ejemplos prácticos y una actividad de verificación al cierre.</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--off);border-radius:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;flex-shrink:0;">1</div>
+            <p style="font-size:18px;color:var(--td);">Introducción a la ciberseguridad desde el perfil del contador</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--off);border-radius:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;flex-shrink:0;">2</div>
+            <p style="font-size:18px;color:var(--td);">Reconocimiento de phishing e ingeniería social</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--off);border-radius:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;flex-shrink:0;">3</div>
+            <p style="font-size:18px;color:var(--td);">Gestión segura de contraseñas y autenticación</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--off);border-radius:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;flex-shrink:0;">4</div>
+            <p style="font-size:18px;color:var(--td);">Protección de datos en el trabajo diario del contador</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--off);border-radius:8px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:16px;flex-shrink:0;">5</div>
+            <p style="font-size:18px;color:var(--td);">Marco legal aplicable: LFPDPPP y Código de Ética del IMCP</p>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--navy);border-radius:12px;padding:18px 28px;">
+        <p style="font-size:18px;color:#fff;line-height:1.6;">El curso será <strong style="color:var(--org2);">100 % en línea</strong>, accesible a cualquier estudiante independientemente del semestre, sin que su horario escolar represente un obstáculo.</p>
       </div>
     </div>
   </div>
 </div>
 
-</div><!-- /slideshow -->
+<!-- ══════════════════════════════════════════
+     S8 · METODOLOGÍA – NIVEL DE LA INVESTIGACIÓN
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s8">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">08 · Metodología</div><div class="sh-tit">Nivel de la investigación</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <div class="body col1" style="gap:32px;justify-content:center;">
 
-<!-- Navigation -->
-<div id="nav">
-  <button class="nav-btn" id="btn-prev">&#8592;</button>
-  <button class="nav-btn" id="btn-next">&#8594;</button>
+    <div class="an" style="display:flex;gap:40px;align-items:stretch;">
+      <div style="flex:1;background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:48px 52px;border-left:8px solid var(--orange);display:flex;flex-direction:column;justify-content:center;">
+        <p style="font-family:var(--fh);font-size:26px;font-weight:900;color:var(--orange);margin-bottom:12px;text-transform:uppercase;letter-spacing:3px;">Nivel 2</p>
+        <p style="font-family:var(--fh);font-size:52px;font-weight:900;color:var(--navy);margin-bottom:28px;">Propositivo</p>
+        <p style="font-size:22px;line-height:1.7;color:var(--tm);">Esta investigación <strong>no se limita a describir una situación</strong>: parte del diagnóstico del nivel de conocimiento en ciberseguridad de los estudiantes de Contador Público del ITO para producir una <strong>propuesta concreta de intervención</strong>.</p>
+      </div>
+      <div style="flex:1;background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:48px 52px;border-left:8px solid var(--navy);display:flex;flex-direction:column;justify-content:center;">
+        <p style="font-family:var(--fh);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:20px;">¿Qué implica ser propositivo?</p>
+        <p style="font-size:22px;line-height:1.75;color:var(--tm);">La investigación avanza de la <strong>caracterización del problema</strong> hacia el <strong>diseño de una solución</strong>. Sin el diagnóstico no hay curso, y sin el curso el diagnóstico no tiene utilidad práctica. Ambas etapas están directamente vinculadas.</p>
+      </div>
+    </div>
+
+    <div class="an" style="background:var(--orange);border-radius:14px;padding:30px 52px;">
+      <p style="font-family:var(--fh);font-size:22px;font-weight:700;color:#fff;text-align:center;">El nivel propositivo sitúa esta investigación como un puente entre el diagnóstico académico y la acción formativa concreta.</p>
+    </div>
+
+  </div>
 </div>
+
+<!-- ══════════════════════════════════════════
+     S9 · METODOLOGÍA – TIPO DE INVESTIGACIÓN
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s9">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">09 · Metodología</div><div class="sh-tit">Tipo de investigación</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <div class="body col1" style="gap:28px;">
+
+    <div class="an" style="display:grid;grid-template-columns:1fr 1fr;gap:28px;flex:1;">
+
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:36px 40px;border-top:6px solid var(--orange);display:flex;flex-direction:column;gap:16px;">
+        <p style="font-family:var(--fh);font-size:28px;font-weight:800;color:var(--navy);">Descriptivo</p>
+        <p style="font-size:20px;line-height:1.7;color:var(--tm);">El objetivo inicial es <strong>caracterizar el nivel de conocimiento en ciberseguridad y los hábitos digitales</strong> de los estudiantes de Contador Público del ITO, tanto en plataformas institucionales como en servicios de uso cotidiano: redes sociales, mensajería, streaming, correos personales y pagos en línea.</p>
+        <p style="font-size:19px;line-height:1.65;color:var(--tm);">A partir de esa caracterización se diseña el curso, <strong>sin intervenir ni manipular las condiciones observadas</strong>.</p>
+      </div>
+
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:36px 40px;border-top:6px solid var(--navy);display:flex;flex-direction:column;gap:16px;">
+        <p style="font-family:var(--fh);font-size:28px;font-weight:800;color:var(--navy);">No experimental y transversal</p>
+        <p style="font-size:20px;line-height:1.7;color:var(--tm);"><strong>No se manipulan variables de forma deliberada</strong>; se observa y analiza la situación tal como existe en la carrera.</p>
+        <p style="font-size:19px;line-height:1.65;color:var(--tm);">La recolección de datos ocurre en <strong>un momento único y definido</strong>, lo que permite obtener un diagnóstico claro del estado actual sin necesidad de seguimiento longitudinal.</p>
+      </div>
+
+    </div>
+
+    <div class="an" style="background:var(--navy);border-radius:14px;padding:26px 48px;flex-shrink:0;">
+      <p style="font-family:var(--fh);font-size:21px;font-weight:700;color:#fff;text-align:center;">La combinación de estos enfoques permite obtener un diagnóstico riguroso como base para una propuesta formativa pertinente y contextualizada.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     S10 · METODOLOGÍA – MÉTODO Y PROCESO
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s10">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">10 · Metodología</div><div class="sh-tit">Método y proceso de desarrollo</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <div class="body" style="gap:40px;">
+
+    <!-- Columna izquierda: Métodos -->
+    <div class="an" style="flex:1;display:flex;flex-direction:column;gap:20px;">
+      <span class="lbl">Método de la investigación</span>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;border-left:6px solid var(--orange);flex:1;">
+        <p style="font-family:var(--fh);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:10px;">Hipotético-deductivo</p>
+        <p style="font-size:19px;line-height:1.65;color:var(--tm);margin-bottom:20px;">Se parte de lo general —la literatura especializada, los patrones de ataque más frecuentes en México y el perfil de vulnerabilidad de usuarios jóvenes— hacia lo particular: una hipótesis aplicada al caso concreto de los estudiantes de Contador Público del ITO, verificada con el cuestionario de diagnóstico.</p>
+        <p style="font-family:var(--fh);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:10px;">Analítico</p>
+        <p style="font-size:19px;line-height:1.65;color:var(--tm);">Una vez recopiladas las respuestas, se descompone la información por secciones temáticas —phishing, contraseñas, protección de datos, herramientas colaborativas y marco legal— para identificar en cuál de ellas los estudiantes presentan mayor vulnerabilidad. Ese análisis determina directamente los contenidos prioritarios de cada módulo del curso.</p>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Etapas -->
+    <div class="an" style="flex:1;display:flex;flex-direction:column;gap:20px;">
+      <span class="lbl">Proceso de desarrollo – 5 etapas</span>
+      <div style="background:var(--white);border:1px solid var(--gray);border-radius:14px;padding:28px 32px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+        <div class="ti">
+          <div class="ti-left"><div class="ti-dot">1</div><div class="ti-line"></div></div>
+          <div class="ti-text"><h4>Diagnóstico</h4><p>Formulación de hipótesis, diseño y aplicación del cuestionario. Los datos se organizan en una base de datos para su análisis.</p></div>
+        </div>
+        <div class="ti">
+          <div class="ti-left"><div class="ti-dot">2</div><div class="ti-line"></div></div>
+          <div class="ti-text"><h4>Análisis y resultados</h4><p>Identificación de las áreas con mayor desconocimiento y los tipos de amenaza más frecuentes en el perfil estudiado. Define los temas prioritarios del curso.</p></div>
+        </div>
+        <div class="ti">
+          <div class="ti-left"><div class="ti-dot">3</div><div class="ti-line"></div></div>
+          <div class="ti-text"><h4>Diseño del curso</h4><p>Estructuración de módulos temáticos con contenido institucional y de uso cotidiano, materiales didácticos y ejemplos prácticos contextualizados.</p></div>
+        </div>
+        <div class="ti">
+          <div class="ti-left"><div class="ti-dot">4</div><div class="ti-line"></div></div>
+          <div class="ti-text"><h4>Elaboración del presupuesto</h4><p>Cálculo de los recursos humanos, tecnológicos y materiales necesarios para implementar el curso en formato en línea.</p></div>
+        </div>
+        <div class="ti" style="margin-bottom:0;">
+          <div class="ti-left"><div class="ti-dot org">5</div></div>
+          <div class="ti-text" style="padding-bottom:0;"><h4>Revisión y entrega</h4><p>El protocolo completo se somete a revisión, se incorporan las observaciones pertinentes y se presenta el producto final.</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     S8 · PRESUPUESTO
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s12">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">12 · Presupuesto</div><div class="sh-tit">Recursos estimados para la implementación</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <!-- área disponible: 1080 - 120 - 7 = 953px -->
+  <div style="width:1920px;height:953px;padding:20px 80px 20px;overflow:hidden;">
+    <table style="width:1760px;border-collapse:collapse;table-layout:fixed;">
+      <colgroup>
+        <col style="width:190px;">
+        <col style="width:auto;">
+        <col style="width:70px;">
+        <col style="width:190px;">
+        <col style="width:190px;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="background:var(--navy);color:#fff;font-family:var(--fh);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:left;">Categoría</th>
+          <th style="background:var(--navy);color:#fff;font-family:var(--fh);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:left;">Concepto</th>
+          <th style="background:var(--navy);color:#fff;font-family:var(--fh);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:center;">Cant.</th>
+          <th style="background:var(--navy);color:#fff;font-family:var(--fh);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:right;">Costo unitario</th>
+          <th style="background:var(--navy);color:#fff;font-family:var(--fh);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:right;">Total (MXN)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- CORRIENTES -->
+        <tr><td colspan="5" style="background:var(--orange);color:#fff;font-family:var(--fh);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;">GASTOS CORRIENTES</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Servicios</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Energía eléctrica (uso de equipo 1 mes)</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">4</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$400.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,600.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Servicios</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Internet (mes)</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">4</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$400.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,600.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Servicios</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Recarga celular</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">4</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$200.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$800.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Viáticos</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Transporte local – gasolina por semana (encuestas / aplicación)</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">12</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$400.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$4,800.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Servicios</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Cambio de neumático</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$2,150.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$2,150.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Insumos</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Impresiones y copias</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">200</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$200.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Insumos</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Encuadernación de proyecto</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$150.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$300.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Consumibles</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Material de oficina (plumas, libretas, etc.)</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$300.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$300.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Memoria USB</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$150.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$300.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Software</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Licencias básicas (Office 365)</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,239.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,239.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Material didáctico</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Libros o recursos digitales</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$300.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$600.00</td></tr>
+        <tr style="background:#e8edf7;"><td colspan="4" style="padding:7px 14px;font-size:14px;font-family:var(--fh);font-weight:700;color:var(--navy);">Subtotal gasto corriente</td><td style="padding:7px 14px;font-size:14px;font-family:var(--fh);font-weight:700;color:var(--navy);text-align:right;">$13,889.00</td></tr>
+        <!-- INVERSIÓN -->
+        <tr><td colspan="5" style="background:var(--orange);color:#fff;font-family:var(--fh);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;">GASTOS DE INVERSIÓN</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Laptop</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$20,000.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$40,000.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Proyector</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$4,000.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$4,000.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Disco duro externo</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,200.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,200.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Escritorios</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,800.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$3,600.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Sillas</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">2</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$1,200.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$2,400.00</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Impresora Brother DCP-T730DW</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$3,829.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$3,829.00</td></tr>
+        <tr style="background:var(--off);"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Regulador de voltaje</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$771.04</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$771.04</td></tr>
+        <tr style="background:#fff;"><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Equipamiento</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);">Monitor</td><td style="padding:5px 14px;font-size:14px;color:var(--tm);border-bottom:1px solid var(--gray);text-align:center;">1</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$2,819.00</td><td style="padding:5px 14px;font-size:14px;color:var(--navy);border-bottom:1px solid var(--gray);text-align:right;font-weight:600;">$2,819.00</td></tr>
+        <tr style="background:#e8edf7;"><td colspan="4" style="padding:7px 14px;font-size:14px;font-family:var(--fh);font-weight:700;color:var(--navy);">Subtotal gasto inversión</td><td style="padding:7px 14px;font-size:14px;font-family:var(--fh);font-weight:700;color:var(--navy);text-align:right;">$58,619.04</td></tr>
+        <!-- GRAN TOTAL -->
+        <tr style="background:var(--navy);"><td colspan="4" style="padding:12px 14px;font-size:18px;font-family:var(--fh);font-weight:800;color:#fff;">GRAN TOTAL</td><td style="padding:12px 14px;font-size:18px;font-family:var(--fh);font-weight:800;color:var(--org2);text-align:right;">$72,508.04</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     S9 · CONCLUSIONES
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s13">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">13 · Conclusiones</div><div class="sh-tit">Los datos hablan por sí solos</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <div class="body col1" style="gap:28px;">
+    <div class="cgrid an" style="flex:1;">
+      <div class="ccard"><div class="pct">72 %</div><p>reutiliza la misma contraseña en múltiples plataformas, incluyendo correo institucional y redes sociales.</p></div>
+      <div class="ccard"><div class="pct">52 %</div><p>de quienes trabajan con información financiera de clientes la almacena sin ningún tipo de protección en sus dispositivos.</p></div>
+      <div class="ccard"><div class="pct">83 %</div><p>no conoce el contenido de la LFPDPPP más allá del nombre, a pesar de que ya aplica a su actividad como practicantes.</p></div>
+      <div class="ccard"><div class="pct">44 %</div><p>nunca había relacionado la obligación de confidencialidad del IMCP con sus herramientas digitales cotidianas.</p></div>
+    </div>
+    <div class="an col2" style="flex:1;gap:28px;">
+      <div class="card nv" style="display:flex;flex-direction:column;justify-content:center;">
+        <h3>El conocimiento teórico existe — falta el hábito</h3>
+        <p>El <strong>78 %</strong> identifica una contraseña segura. El <strong>76 %</strong> reconoce un dominio falso. El <strong>81 %</strong> sabe que Google Drive tiene configuraciones de permisos. <strong>El problema no es de capacidad: es que ese conocimiento no se ha convertido en hábito. Ahí es donde el curso interviene.</strong></p>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
+        <h3>Resultado esperado al concluir los 5 módulos</h3>
+        <p>El estudiante sabrá identificar un correo falso del SAT, usará contraseñas distintas para su correo institucional y sus redes sociales, configurará correctamente los permisos de archivos compartidos y entenderá sus obligaciones legales sobre los datos que maneja.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     S10 · BIBLIOGRAFÍA
+══════════════════════════════════════════ -->
+<div class="slide inner" id="s14">
+  <div class="sh an">
+    <div class="sh-left"><div class="sh-tag">14 · Bibliografía</div><div class="sh-tit">Fuentes consultadas – APA 7</div></div>
+    <div class="sh-logo">ITO · TecNM</div>
+  </div>
+  <div class="obar"></div>
+  <div class="body col1" style="padding-top:40px;padding-bottom:44px;">
+    <div class="an bgrid">
+      <div class="bitem">Asociación de Internet MX. (2023, 7 de noviembre). <em>Estudio de Ciberseguridad México 2023.</em> Presentado en el Senado de la República.</div>
+      <div class="bitem">Cámara de Diputados. (2010, reform. 2025). <em>Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</em> DOF.</div>
+      <div class="bitem">El Financiero. (2025, 10 de marzo). <em>SAT vulnerado: fraude de ciberseguridad afecta cuentas autorizadas.</em> El Financiero.</div>
+      <div class="bitem">Google &amp; Harris Poll. (2019). <em>Online Security Survey.</em></div>
+      <div class="bitem">Instituto Mexicano de Contadores Públicos. (2024). <em>Código de Ética Profesional</em> (12.ª ed.). IMCP.</div>
+      <div class="bitem">Instituto de Transparencia del Estado de México. (2024). <em>Phishing, amenaza cibernética más extendida en México.</em> Infoem.</div>
+      <div class="bitem">Kaspersky. (2023, octubre). <em>Ataques de ransomware superan 1.1 millones de intentos en América Latina.</em> Kaspersky LATAM.</div>
+      <div class="bitem">Servicio de Administración Tributaria. (2023). <em>Alertas sobre correos y mensajes falsos que suplantan al SAT.</em> Gobierno de México.</div>
+      <div class="bitem">Tecnológico Nacional de México. (2010). <em>Retícula de la carrera de Contador Público.</em> TecNM.</div>
+      <div class="bitem" style="border-bottom:none;">Yucatán.com.mx. (2025, 28 de diciembre). <em>Hackeo al SAT: venden 120 mil facturas con datos bancarios y fiscales tras ciberataque.</em></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /stage -->
 
 <script>
+/* ── SCALE STAGE TO SCREEN ── */
+const stage = document.getElementById('stage');
+function scaleStage() {
+  const sw = window.innerWidth, sh = window.innerHeight;
+  const scaleX = sw / 1920, scaleY = sh / 1080;
+  const scale = Math.min(scaleX, scaleY);
+  const offX = (sw - 1920 * scale) / 2;
+  const offY = (sh - 1080 * scale) / 2;
+  stage.style.transform = `translate(${offX}px, ${offY}px) scale(${scale})`;
+}
+scaleStage();
+window.addEventListener('resize', scaleStage);
+
+/* ── AUTO-SCALE BUDGET TABLE ── */
+function scaleBudget() {
+  const container = document.getElementById('budget-container');
+  if (!container) return;
+  const availableH = 873 - 56; /* área body menos padding top+bot */
+  const tableH = container.scrollHeight;
+  if (tableH > availableH) {
+    const s = availableH / tableH;
+    container.style.transform = `scale(${s})`;
+    container.style.transformOrigin = 'top left';
+  } else {
+    container.style.transform = 'none';
+  }
+}
+/* Ejecutar tras cargar fuentes */
+if (document.fonts) {
+  document.fonts.ready.then(scaleBudget);
+} else {
+  window.addEventListener('load', scaleBudget);
+}
+
+/* ── SLIDES ── */
 const slides = document.querySelectorAll('.slide');
 const total = slides.length;
-let current = 0, busy = false;
+let cur = 0, busy = false;
 
-const progBar = document.getElementById('prog-bar');
-const counter = document.getElementById('slide-counter');
+const pb  = document.getElementById('prog-bar');
+const ctr = document.getElementById('slide-counter');
 
 function goTo(idx, dir) {
-  if (busy || idx === current || idx < 0 || idx >= total) return;
+  if (busy || idx === cur || idx < 0 || idx >= total) return;
   busy = true;
-  const from = slides[current], to = slides[idx];
+  const from = slides[cur], to = slides[idx];
   to.classList.add(dir > 0 ? 'enter-r' : 'enter-l');
-  to.style.display = 'flex';
+  to.style.display = 'block';
   requestAnimationFrame(() => requestAnimationFrame(() => {
     from.classList.add('exit-l');
     from.classList.remove('active');
@@ -947,35 +862,33 @@ function goTo(idx, dir) {
       busy = false;
     }, 420);
   }));
-  current = idx;
-  updateUI();
+  cur = idx;
+  pb.style.width = (cur / (total - 1) * 100) + '%';
+  ctr.textContent = (cur + 1) + ' / ' + total;
 }
 
-function updateUI() {
-  progBar.style.width = (current / (total-1) * 100) + '%';
-  counter.textContent = (current+1) + ' / ' + total;
-}
-
-document.getElementById('btn-next').onclick = () => goTo(current+1, 1);
-document.getElementById('btn-prev').onclick = () => goTo(current-1, -1);
+document.getElementById('bn').onclick = () => goTo(cur + 1, 1);
+document.getElementById('bp').onclick = () => goTo(cur - 1, -1);
 
 document.addEventListener('keydown', e => {
-  if (e.key==='ArrowRight'||e.key==='ArrowDown') goTo(current+1, 1);
-  if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   goTo(current-1, -1);
-  if (e.key==='f'||e.key==='F') {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(cur + 1, 1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(cur - 1, -1);
+  if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
     else document.exitFullscreen();
   }
 });
 
 let tx = 0;
 document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
-document.addEventListener('touchend', e => {
+document.addEventListener('touchend',   e => {
   const dx = e.changedTouches[0].clientX - tx;
-  if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+  if (Math.abs(dx) > 50) goTo(cur + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
 });
 
-updateUI();
+/* init */
+pb.style.width  = '0%';
+ctr.textContent = '1 / ' + total;
 </script>
 </body>
 </html>
